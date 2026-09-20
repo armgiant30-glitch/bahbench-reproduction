@@ -1,0 +1,11 @@
+{
+  "experiment": "confusion_matrix_visualization",
+  "input": "paper_transformer JSON with predictions",
+  "tasks": ["ICBHI", "TORGO", "SEP-28k"],
+  "models": [
+    "facebook/hubert-base-ls960",
+    "facebook/wav2vec2-base",
+    "facebook/wav2vec2-large"
+  ],
+  "normalization": "row"
+}

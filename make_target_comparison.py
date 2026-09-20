@@ -1,0 +1,17 @@
+import csv
+from pathlib import Path
+p=Path(r'D:\a\bahbench_repro_package\TARGET_COMPARISON.csv')
+rows=[
+ ['论文目标/结论','复现状态','目标对比点','运行/分析方法','判定标准','对应证据与代码'],
+ ['基础模型特征优于手工特征','未复现','model WF1 vs eGeMAPS/ComParE WF1','补手工特征后同 split 运行','模型 WF1 高于手工特征','需补 eGeMAPS/ComParE'],
+ ['声学任务偏好低中层、语义任务偏好高层','未完整复现','不同 layer 的 WF1 峰值位置','paper_transformer.py --layer 0..L','低层/中层峰值 vs 高层峰值','C1; --layer 接口已实现'],
+ ['base 不一定优于 large','部分复现','wav2vec2-base vs wav2vec2-large','同任务同 split 运行','large 在同一任务上不必然更高','Table Transformer results; Fig 2'],
+ ['预训练领域相关性比规模关键','未复现','OPERA-CT/WavLM vs 通用大模型','补领域模型并同 split 运行','领域模型以较少参数反超','需补 OPERA/WavLM'],
+ ['LoRA 有效且秩增长后收益饱和','部分/趋势复现','r=2,4,8,16 的 WF1','paper_transformer.py --mode lora','最佳秩后 WF1 趋稳或下降','C1,C2; Fig 4; Table 3'],
+ ['类别不平衡时 WA 与 UA 分岔','已复现趋势','WA-UA 差距与 per-class recall','ICBHI/SEP 结果与混淆矩阵','WA 高而 UA 低，少数类召回低','Fig 3, Fig 6'],
+ ['论文表 III 严格数值复现','未完成','当前结果 vs 论文同模型值','官方数据+官方 split+论文预处理','差异约 ±2pp 且协议一致','Fig 3; Table 2'],
+ ['六任务统一评估','未完成','6 个任务的完整指标表','补齐数据与模型矩阵','六任务均有完整结果','Fig 1']
+]
+with p.open('w',encoding='utf-8-sig',newline='') as f:
+ w=csv.writer(f); w.writerows(rows)
+print(p)
