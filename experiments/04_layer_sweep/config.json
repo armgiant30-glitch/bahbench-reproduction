@@ -1,0 +1,29 @@
+{
+  "experiment": "layer_sweep",
+  "model": "facebook/hubert-base-ls960",
+  "layers": [1, 4, 7, 10, 12],
+  "layer_decision_rule": {
+    "low_mid": [1, 6],
+    "high": [7, 12],
+    "flat_threshold_wf1": 0.01
+  },
+  "tasks": {
+    "ICBHI": "/root/autodl-tmp/extra/manifest_icbhi.csv",
+    "TORGO": "/root/autodl-tmp/extra/manifest_torgo.csv",
+    "SEP-28k": "/root/autodl-tmp/bahbench-data/sep28k_manifest.csv"
+  },
+  "hyperparameters": {
+    "mode": "frozen",
+    "d_model": 768,
+    "nhead": 8,
+    "num_layers": 1,
+    "dim_feedforward": 3072,
+    "dropout": 0.5,
+    "batch_size": 32,
+    "epochs": 50,
+    "lr": 0.0005,
+    "weight_decay": 0.01,
+    "max_seconds": 6.0,
+    "seed": 0
+  }
+}

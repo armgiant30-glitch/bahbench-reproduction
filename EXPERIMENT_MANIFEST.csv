@@ -2,3 +2,4 @@ experiment,purpose,comparison_point,code,config,command,outputs,status
 01_paper_transformer,复现论文统一主结构与表 III,frozen 下三模型对论文同模型,src/paper_transformer.py,experiments/01_paper_transformer/config.json,bash experiments/01_paper_transformer/run.sh,results/paper_transformer_*,completed
 02_lora_rank_sweep,验证 LoRA 秩与性能拐点,r=2/4/8/16 同任务比较,src/paper_transformer.py;src/lora.py,experiments/02_lora_rank_sweep/config.json,bash experiments/02_lora_rank_sweep/run.sh,results/paper_transformer_lora_*,completed
 03_confusion_matrices,查看类别混淆和少数类召回,每个任务三模型混淆矩阵,src/make_confusion_matrices.py,experiments/03_confusion_matrices/config.json,bash experiments/03_confusion_matrices/run.sh,results/confusion_matrices/,pending_rerun
+04_layer_sweep,复现论文层选择结论,最佳 WF1 层位置与低中层/高层,src/paper_transformer.py,experiments/04_layer_sweep/config.json,bash experiments/04_layer_sweep/run.sh,results/layer_sweep_*,pending
