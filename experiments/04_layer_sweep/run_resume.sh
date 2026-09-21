@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+set -euo pipefail
+export HF_ENDPOINT=${HF_ENDPOINT:-https://hf-mirror.com}
+export HF_HOME=${HF_HOME:-/root/autodl-tmp/hf}
+cd "$(dirname "$0")/../.."
+model=facebook/hubert-base-ls960
+LAYERS=${LAYERS:-"1 4 7 10 12"}
+for spec in \
+  "ICBHI:/root/autodl-tmp/extra/manifest_icbhi.csv" \
+  "TORGO:/root/autodl-tmp/extra/manifest_torgo.csv" \
+  "SEP-28k:/root/autodl-tmp/bahbench-data/sep28k_manifest.csv"; do
+  task=${spec%%:*}
+  manifest=${spec#*:}
+  if [[ ! -f "$manifest" ]]; then
+    echo "[skip] missing manifest for ${task}: ${manifest}"
+    continue
+  fi
+  for layer in $LAYERS; do
+    out="results/layer_sweep_${task}"
+    result="${out}/paper_transformer_frozen_layer${layer}_facebook_hubert-base-ls960.json"
+    if [[ -f "$result" ]]; then
+      echo "[skip] ${result}"
+      continue
+    fi
+    python src/paper_transformer.py \
+      --model "$model" --manifest "$manifest" --mode frozen --layer "$layer" \
+      --d-model 768 --nhead 8 --num-layers 1 --dim-feedforward 3072 \
+      --dropout 0.5 --batch-size 32 --epochs 50 --lr 5e-4 --weight-decay 1e-2 \
+      --max-seconds 6 --device cuda --out "$out"
+  done
+done
+python src/plot_layer_sweep.py

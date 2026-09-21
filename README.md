@@ -4,10 +4,12 @@
 
 ## 复现范围
 
-当前主包只包含论文版 Transformer、LoRA 秩扫描、混淆矩阵和逐层特征实验，不包含线性探针结果。
+当前主包包含论文版 Transformer、LoRA 秩扫描、池化对照、样本量×秩二维扫描、混淆矩阵和逐层特征实验，不包含线性探针结果。
 
 - 论文版 Transformer：冻结基础模型 → 768 维投影 → 单层标准 Transformer → 分类头
 - LoRA 秩扫描：HuBERT-base 的 Q/K/V LoRA，r=2,4,8,16
+- 池化对照：只改变 `cls / mean / max` 池化，比较结构差异
+- 样本量 × 秩：扫描每类 50/100/200/500 个样本与 LoRA r=2/4/8/16
 - 逐层特征选择：只改变基础模型 `--layer`，判断低中层/高层偏好
 - 任务：ICBHI、TORGO、SEP-28k
 
@@ -19,6 +21,8 @@ experiments/01_paper_transformer/  论文版 Transformer 实验
 experiments/02_lora_rank_sweep/    LoRA 秩扫描实验
 experiments/03_confusion_matrices/ 混淆矩阵实验
 experiments/04_layer_sweep/        逐层特征选择实验
+ experiments/05_pooling_comparison/ 池化对照实验
+ experiments/06_data_size_rank_sweep/ 样本量×LoRA 秩二维实验
 results_summary/                   已整理结果、CSV、图表和报告
 DATA_AND_SPLIT.md                  数据路径和论文 split 差异
 LAYER_SWEEP.md                     论文中的层选择判定规则
@@ -33,7 +37,9 @@ environment.md                     运行环境和依赖
 4. 运行 `bash experiments/02_lora_rank_sweep/run.sh`。
 5. 运行 `python src/plot_rank_sweep.py`。
 6. 运行 `bash experiments/03_confusion_matrices/run.sh`。
-7. 如需复现层选择结论，运行 `bash experiments/04_layer_sweep/run.sh`。
+7. 如需复现层选择结论，运行 `bash experiments/04_layer_sweep/run.sh` 或断点续跑 `bash experiments/04_layer_sweep/run_resume.sh`。
+8. 如需复现池化差异，运行 `bash experiments/05_pooling_comparison/run.sh`。
+9. 如需复现样本量×秩拐点，运行 `bash experiments/06_data_size_rank_sweep/run.sh`。
 
 ## 代码约定
 
@@ -42,6 +48,7 @@ environment.md                     运行环境和依赖
 - Transformer 下游只使用一层，不是多层堆叠。
 - 随机种子固定为 0。
 - 结果 JSON 保存 `args`、`classes`、`split`、`metrics` 和 `predictions`。
+- `--pool` 支持 `cls / mean / max`；`--max-per-class` 用于样本量扫描。
 
 ## 结果说明
 

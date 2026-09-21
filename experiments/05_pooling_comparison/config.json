@@ -1,0 +1,22 @@
+{
+  "experiment": "pooling_comparison",
+  "model": "facebook/hubert-base-ls960",
+  "task": "TORGO",
+  "manifest": "/root/autodl-tmp/extra/manifest_torgo.csv",
+  "pools": ["cls", "mean", "max"],
+  "hyperparameters": {
+    "mode": "frozen",
+    "layer": -1,
+    "d_model": 768,
+    "nhead": 8,
+    "num_layers": 1,
+    "dim_feedforward": 3072,
+    "dropout": 0.5,
+    "batch_size": 32,
+    "epochs": 50,
+    "lr": 0.0005,
+    "weight_decay": 0.01,
+    "max_seconds": 6.0,
+    "seed": 0
+  }
+}

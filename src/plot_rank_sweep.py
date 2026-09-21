@@ -8,10 +8,23 @@ import matplotlib.pyplot as plt
 ROOT = Path(os.environ.get('BAHBENCH_RESULTS', 'results'))
 OUT = ROOT / 'plots'
 OUT.mkdir(parents=True, exist_ok=True)
+
+
+def task_dir(name):
+    candidates = [
+        ROOT / f'paper_transformer_lora_{name}',
+        ROOT / f'paper_transformer_lora_{name.lower()}',
+        ROOT / f'paper_transformer_lora_{name.lower().replace("-", "")}',
+    ]
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+    return candidates[0]
+
 TASKS = {
-    'ICBHI': ROOT / 'paper_transformer_lora_icbhi',
-    'TORGO': ROOT / 'paper_transformer_lora_torgo',
-    'SEP-28k': ROOT / 'paper_transformer_lora_sep28k',
+    'ICBHI': task_dir('ICBHI'),
+    'TORGO': task_dir('TORGO'),
+    'SEP-28k': task_dir('SEP-28k'),
 }
 COLORS = {'WA': '#1f77b4', 'UA': '#d62728', 'WF1': '#2ca02c'}
 

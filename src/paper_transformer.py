@@ -24,6 +24,8 @@ def parse_args():
     p.add_argument('--smoke', action='store_true')
     p.add_argument('--limit', type=int, default=None)
     p.add_argument('--max-seconds', type=float, default=6.0)
+    p.add_argument('--max-per-class', type=int, default=None)
+    p.add_argument('--pool', default='cls', choices=['cls','mean','max'])
     p.add_argument('--layer', type=int, default=-1, help='hidden_states index; -1 means last_hidden_state')
     p.add_argument('--d-model', type=int, default=768)
     p.add_argument('--nhead', type=int, default=8)
@@ -52,6 +54,16 @@ def pick_device(s):
 
 def prep_items(args):
     items = load_manifest(args.manifest)
+    if args.max_per_class:
+        groups = {}
+        for path, label in items:
+            groups.setdefault(str(label), []).append((path, label))
+        items = []
+        for label, group in sorted(groups.items()):
+            rng = random.Random(f'{args.seed}:{label}')
+            group = list(group)
+            rng.shuffle(group)
+            items.extend(group[:args.max_per_class])
     if args.limit:
         items = items[:args.limit]
     data = []
@@ -91,11 +103,12 @@ def batch_iter(data, y, idx, batch_size, shuffle, seed):
 
 class PaperTransformer(nn.Module):
     def __init__(self, foundation, n_classes, d_model, nhead, num_layers,
-                 dim_feedforward, dropout, mode='frozen', r=16, lora_targets='qkv', layer=-1):
+                 dim_feedforward, dropout, mode='frozen', r=16, lora_targets='qkv', layer=-1, pool='cls'):
         super().__init__()
         self.foundation = foundation
         self.mode = mode
         self.layer = layer
+        self.pool = pool
         for p in self.foundation.parameters():
             p.requires_grad_(False)
         if mode == 'lora':
@@ -140,7 +153,18 @@ class PaperTransformer(nn.Module):
         h = torch.cat([cls, h], dim=1)
         m = torch.cat([torch.ones(mask.size(0),1,device=mask.device,dtype=mask.dtype), mbase], dim=1)
         h = self.encoder(h, src_key_padding_mask=(m == 0))
-        return self.classifier(h[:,0])
+        if self.pool == 'cls':
+            pooled = h[:,0]
+        else:
+            valid = m[:,1:].bool()
+            seq = h[:,1:]
+            if self.pool == 'mean':
+                seq = seq * valid.unsqueeze(-1)
+                pooled = seq.sum(1) / valid.sum(1).clamp(min=1).unsqueeze(1)
+            else:
+                seq = seq.masked_fill(~valid.unsqueeze(-1), -1e9)
+                pooled = seq.max(1).values
+        return self.classifier(pooled)
 
 
 def evaluate(model, data, y, idx, batch_size, device):
@@ -173,7 +197,7 @@ def main():
     n_classes=len(classes)
     model=PaperTransformer(foundation,n_classes,args.d_model,args.nhead,args.num_layers,
                            args.dim_feedforward,args.dropout,args.mode,args.r,
-                           args.lora_targets,args.layer).to(device)
+                           args.lora_targets,args.layer,args.pool).to(device)
     trainable=[p for p in model.parameters() if p.requires_grad]
     print(f'[model] classes={n_classes}, trainable={sum(p.numel() for p in trainable):,}')
     weight=None
@@ -208,6 +232,8 @@ def main():
     out=Path(args.out); out.mkdir(parents=True,exist_ok=True)
     result={'args':vars(args),'classes':classes,'split':{'train':len(tr),'val':len(va),'test':len(te)},'metrics':met,'predictions':{'y_true':yt.tolist(),'y_pred':pt.tolist()}}
     suffix=args.mode if args.mode != 'lora' else f"lora_r{args.r}"
+    if args.pool != 'cls':
+        suffix += f"_pool{args.pool}"
     if args.layer >= 0:
         suffix += f"_layer{args.layer}"
     path=out/f"paper_transformer_{suffix}_{args.model.replace('/','_')}.json"
